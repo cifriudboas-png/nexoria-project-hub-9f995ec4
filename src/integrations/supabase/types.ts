@@ -130,6 +130,10 @@ export type Database = {
     }
     Functions: {
       admin_delete_game: { Args: { _game: string }; Returns: undefined }
+      admin_give_item: {
+        Args: { _item: string; _player: string }
+        Returns: undefined
+      }
       admin_give_nexos: {
         Args: { _amount: number; _player: string }
         Returns: undefined
@@ -148,6 +152,7 @@ export type Database = {
           username: string
         }[]
       }
+      admin_player_items: { Args: { _player: string }; Returns: string[] }
       admin_set_banned: {
         Args: { _banned: boolean; _player: string }
         Returns: undefined
