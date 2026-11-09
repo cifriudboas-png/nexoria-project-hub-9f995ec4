@@ -1,18 +1,25 @@
-import type { LucideIcon } from 'lucide-react';
+import { Lock, type LucideIcon } from 'lucide-react';
 import { usePreferences } from '@/lib/preferences-context';
 
 type ExperienceCardProps = {
   title: string;
   icon: LucideIcon;
   gradientClass: string;
+  isPrivate?: boolean;
 };
 
-export default function ExperienceCard({ title, icon: Icon, gradientClass }: ExperienceCardProps) {
+export default function ExperienceCard({ title, icon: Icon, gradientClass, isPrivate = false }: ExperienceCardProps) {
   const { t } = usePreferences();
 
   return (
     <article className="group overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-stone-900/5 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg dark:bg-stone-900 dark:ring-white/10 dark:hover:shadow-black/40">
-      <div className={`flex aspect-[4/3] items-center justify-center overflow-hidden ${gradientClass}`}>
+      <div className={`relative flex aspect-[4/3] items-center justify-center overflow-hidden ${gradientClass}`}>
+        {isPrivate && (
+          <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-stone-900/70 px-2 py-0.5 text-[11px] font-bold uppercase text-yellow-300">
+            <Lock className="h-3 w-3" />
+            {t('privateBadge')}
+          </span>
+        )}
         <Icon className="h-16 w-16 text-white/90 drop-shadow-md transition-transform duration-500 ease-out group-hover:scale-110" />
       </div>
       <div className="px-3 pb-3 pt-2.5">

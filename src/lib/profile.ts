@@ -5,6 +5,16 @@ export type ProfileDetails = {
   createdAt: string;
 };
 
+/** Whether the signed-in player's account was banned by an admin. */
+export async function isCurrentUserBanned(): Promise<boolean> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id;
+  if (!userId) return false;
+  const { data, error } = await supabase.from('profiles').select('banned').eq('id', userId).maybeSingle();
+  if (error) return false;
+  return data?.banned === true;
+}
+
 export async function getProfileDetails(): Promise<ProfileDetails | null> {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) throw sessionError;

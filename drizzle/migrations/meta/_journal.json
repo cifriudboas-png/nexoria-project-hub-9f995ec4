@@ -8,6 +8,20 @@
       "when": 1794257025613,
       "tag": "0000_nexoria_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794258401288,
+      "tag": "0001_admin_panel_games_players",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794258446183,
+      "tag": "0002_admin_player_items",
+      "breakpoints": true
     }
   ]
 }

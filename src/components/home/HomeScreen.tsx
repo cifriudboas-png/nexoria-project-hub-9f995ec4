@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Bomb, Box, Pizza, Youtube } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import AdminPanel from '@/components/admin/AdminPanel';
 import CharacterViewer from '@/components/avatar/CharacterViewer';
 import AvatarEditorView from '@/components/home/AvatarEditorView';
 import CatalogView from '@/components/home/CatalogView';
@@ -20,18 +20,13 @@ import HomeTopBar from '@/components/home/HomeTopBar';
 import ProfileView from '@/components/home/ProfileView';
 import type { Account } from '@/lib/account';
 import { usePreferences } from '@/lib/preferences-context';
+import { isCurrentUserAdmin } from '@/lib/admin';
+import { listGames, type Game } from '@/lib/games';
 
 type HomeScreenProps = {
   account: Account;
   onSignOut: () => void;
 };
-
-const CONTINUE_EXPERIENCES = [
-  { title: 'Pizza Tycoon', icon: Pizza, gradientClass: 'bg-gradient-to-br from-amber-300 via-orange-400 to-red-500' },
-  { title: 'Bomb Survival', icon: Bomb, gradientClass: 'bg-gradient-to-br from-yellow-300 via-orange-500 to-red-700' },
-  { title: 'Video Factory', icon: Youtube, gradientClass: 'bg-gradient-to-br from-sky-300 via-teal-400 to-red-400' },
-  { title: 'Ride the Box', icon: Box, gradientClass: 'bg-gradient-to-br from-emerald-400 via-teal-500 to-sky-600' },
-];
 
 export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
   const { t } = usePreferences();
@@ -45,19 +40,44 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
   const [nexos, setNexos] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  const [games, setGames] = useState<Game[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
+  const loadAvatar = useCallback(() => {
     if (isGuest) return;
-    let isActive = true;
     getAvatarState()
       .then((state) => {
-        if (!isActive) return;
         setEquippedShirt(state.shirt);
         setEquippedHair(state.hair);
         setOwnedHair(state.ownedHair);
         setNexos(state.nexos);
       })
       .catch(() => undefined);
+  }, [isGuest]);
+
+  const loadGames = useCallback(async () => {
+    try {
+      setGames(await listGames());
+    } catch {
+      setGames([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAvatar();
+  }, [loadAvatar]);
+
+  useEffect(() => {
+    void loadGames();
+  }, [loadGames]);
+
+  // The panel only shows when the database confirms this player is an admin.
+  useEffect(() => {
+    if (isGuest) return;
+    let isActive = true;
+    isCurrentUserAdmin().then((result) => {
+      if (isActive) setIsAdmin(result);
+    });
     return () => {
       isActive = false;
     };
@@ -185,16 +205,28 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
               <section className="mt-10">
                 <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">{t('continueSection')}</h2>
 
-                <div className="mt-4 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
-                  {CONTINUE_EXPERIENCES.map((experience) => (
-                    <ExperienceCard key={experience.title} {...experience} />
-                  ))}
-                </div>
+                {games.length === 0 ? (
+                  <p className="mt-4 text-sm text-stone-500 dark:text-stone-400">{t('noGamesYet')}</p>
+                ) : (
+                  <div className="mt-4 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+                    {games.map((game) => (
+                      <ExperienceCard
+                        key={game.id}
+                        title={game.title}
+                        icon={game.icon}
+                        gradientClass={game.gradientClass}
+                        isPrivate={game.isPrivate}
+                      />
+                    ))}
+                  </div>
+                )}
               </section>
             </>
           )}
         </main>
       </div>
+
+      {isAdmin && <AdminPanel games={games} onGamesChanged={loadGames} onPlayerChanged={loadAvatar} />}
     </div>
   );
 }
